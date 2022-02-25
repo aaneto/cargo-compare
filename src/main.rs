@@ -12,6 +12,9 @@ struct Args {
     #[clap(short, long)]
     /// Path of the second file to compare
     second_path: String,
+
+    #[clap(short, long)]
+    ignore_array_ordering: bool,
 }
 
 use serde_json::Value;
@@ -24,8 +27,8 @@ fn main() {
     let ajson: Value = serde_json::from_str(&af).unwrap();
     let bjson: Value = serde_json::from_str(&bf).unwrap();
 
-    let alines: HashSet<String> = to_serialized_str(ajson).into_iter().collect();
-    let blines: HashSet<String> = to_serialized_str(bjson).into_iter().collect();
+    let alines: HashSet<String> = to_serialized_str(ajson, args.ignore_array_ordering).into_iter().collect();
+    let blines: HashSet<String> = to_serialized_str(bjson, args.ignore_array_ordering).into_iter().collect();
 
     println!("\nKeys only in A:");
     for ak in alines.difference(&blines) {
@@ -38,13 +41,17 @@ fn main() {
     }
 }
 
-fn to_serialized_str(val: Value) -> Vec<String> {
+fn to_serialized_str(val: Value, ignore_array_ordering: bool) -> Vec<String> {
     match val {
         Value::Array(arr) => {
             let mut out = vec![];
             for (i, val) in arr.iter().enumerate() {
-                for v in to_serialized_str(val.clone()) {
-                    out.push(format!("{}/{}", i, v));
+                for v in to_serialized_str(val.clone(), ignore_array_ordering) {
+                    if (ignore_array_ordering) {
+                        out.push(format!("//{}", v));
+                    } else {
+                        out.push(format!("{}/{}", i, v));
+                    }
                 }
             }
             out
@@ -56,7 +63,7 @@ fn to_serialized_str(val: Value) -> Vec<String> {
         Value::Object(mapper) => {
             let mut out = vec![];
             for (key, val) in mapper {
-                for v2 in to_serialized_str(val.clone()) {
+                for v2 in to_serialized_str(val.clone(), ignore_array_ordering) {
                     out.push(format!("{}={}", key, v2));
                 }
             }
