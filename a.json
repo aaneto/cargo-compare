@@ -1,0 +1,13 @@
+{
+    "name": "Adilson",
+    "age": 20,
+    "vals": [10, 20, 30],
+    "anotheobj": {
+        "doo": "bar",
+        "val": 17,
+        "test": [10, 20, {
+            "message": "whatsup?",
+            "val": [1, 2, 3]
+        }]
+    }
+}
